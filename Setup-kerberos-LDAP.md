@@ -48,12 +48,20 @@ chkconfig kadmin on
 - Create admin principal
 ```
 kadmin.local -q "addprinc admin/admin"
+kadmin.local -q "addprinc -pw hadoop cloudera-scm/admin@HOMELAB.COM"
 ```
 
 - Update kadm5.acl to make admin an administrator
 ```
 vi /var/kerberos/krb5kdc/kadm5.acl
 */admin@homelab.COM *
+```
+- Update kdc.conf to make admin an administrator
+```
+vi /var/kerberos/krb5kdc/kdc.conf
+max_life = 1d  
+max_renewable_life = 7d
+kdc_tcp_ports = 88
 ```
 - Restart kerberos services
 ```
