@@ -4,24 +4,27 @@
 - Install kerberos (usually needed on each node but sandbox only has one)
 ```
 yum -y install krb5-server krb5-libs krb5-auth-dialog krb5-workstation
+
+-- Install ldap clients on the cloudera manager server 
+
+yum -y openldap-clients
 ```
 
 - Configure kerberos
 ```
 vi /var/lib/ambari-server/resources/scripts/krb5.conf
 #edit default realm and realm info as below
-default_realm = HORTONWORKS.COM
+default_realm = HOMELAB.COM
 
 [realms]
- HORTONWORKS.COM = {
-  kdc = sandbox.hortonworks.com
-  admin_server = sandbox.hortonworks.com
+ HOMELAB.COM = {
+  kdc = sandbox.homelab.com
+  admin_server = sandbox.homelab.com
  }
 
 [domain_realm]
- .hortonworks.com = HORTONWORKS.COM
- hortonworks.com = HORTONWORKS.COM
- #sandbox.hortonworks.com = HORTONWORKS.COM
+ .homelab.com = HOMELAB.COM
+ homelab.com = HO.COM
 ```
 
 - Copy conf file to /etc
@@ -29,7 +32,7 @@ default_realm = HORTONWORKS.COM
 cp /var/lib/ambari-server/resources/scripts/krb5.conf /etc
 ```
 
-- Create kerberos db: when asked, enter hortonworks as the key
+- Create kerberos db: when asked, enter hadoop as the key
 ```
 kdb5_util create -s
 ```
@@ -50,7 +53,7 @@ kadmin.local -q "addprinc admin/admin"
 - Update kadm5.acl to make admin an administrator
 ```
 vi /var/kerberos/krb5kdc/kadm5.acl
-*/admin@HORTONWORKS.COM *
+*/admin@homelab.COM *
 ```
 - Restart kerberos services
 ```
@@ -58,7 +61,7 @@ vi /var/kerberos/krb5kdc/kadm5.acl
 /etc/rc.d/init.d/kadmin restart
 ```
 
-- Login to Ambari (if server is not started, execute /root/start_ambari.sh) by opening http://sandbox.hortonworks.com:8080 and then
+- Login to Ambari (if server is not started, execute /root/start_ambari.sh) by opening http://sandbox.homelab.com:8080 and then
   - Admin -> Security-> click “Enable Security”
   - On "get started” page, click Next
   - On “Configure Services”, click Next to accept defaults
@@ -68,7 +71,7 @@ vi /var/kerberos/krb5kdc/kadm5.acl
 - add below line to  to csv file 
 ```
 vi host-principal-keytab-list.csv
-sandbox.hortonworks.com,Hue,hue/sandbox.hortonworks.com@HORTONWORKS.COM,hue.service.keytab,/etc/security/keytabs,hue,hadoop,400
+sandbox.homelab.com,Hue,hue/sandbox.homelab.com@HOMELAB.COM,hue.service.keytab,/etc/security/keytabs,hue,hadoop,400
 ```
 
 - Execute below to generate principals, key tabs 
@@ -90,7 +93,7 @@ klist -ekt /etc/security/keytabs/nn.service.keytab
 
 - verify you can kinit as hadoop components. This should not return any errors
 ```
-kinit -kt /etc/security/keytabs/nn.service.keytab nn/sandbox.hortonworks.com@HORTONWORKS.COM
+kinit -kt /etc/security/keytabs/nn.service.keytab nn/sandbox.homelab.com@HOMELAB.COM
 ```
 - Click Apply in Ambari to enable security and restart all the components
 
@@ -104,7 +107,7 @@ hadoop fs -ls
 #Confirm that the use does not have ticket
 klist
 #Create a kerberos ticket for the user
-kinit -kt /etc/security/keytabs/hue.service.keytab hue/sandbox.hortonworks.com@HORTONWORKS.COM
+kinit -kt /etc/security/keytabs/hue.service.keytab hue/sandbox.homelab.com@HOMELAB.COM
 #verify that hue user can now get ticket and can access HDFS
 klist
 hadoop fs -ls /user
@@ -113,7 +116,7 @@ exit
 - This confirms that we have successfully enabled kerberos on our cluster
 
 - Open Hue and notice it **no longer works** e.g. FileBrowser givers error
-http://sandbox.hortonworks.com:8000
+http://sandbox.homelab.com:8000
 
 - **Make the config changes needed to make Hue work on a LDAP enbled kerborized cluster using steps [here](https://github.com/abajwa-hw/security-workshops/blob/master/Setup-Hue-kerberos-LDAP.md)**
 
