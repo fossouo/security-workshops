@@ -1,11 +1,34 @@
 #### Secure LDAP enabled single node HDP cluster using Kerberos
 
 
-- Install kerberos (usually needed on each node but sandbox only has one)
+- Install kerberos (On the server cloudera manager or Ambari)
 ```
 yum -y install krb5-server krb5-libs krb5-auth-dialog krb5-workstation
 
--- Install ldap clients on the cloudera manager server 
+- Install kerberos (On all others nodes)
+```
+yum -y install krb5-workstation
+yum -y install krb5-libs
+
+Can be done through Ansible : 
+yum install -y epel-release
+yum install -y ansible
+mkdir ansible-playbook
+cd ansible-playbook/
+[root@node-1 ansible-playbook]# cat inventory/homelab 
+[all]
+node-1.testing
+node-3.testing
+node-4.testing
+node-5.testing
+node-6.testing
+node-7.testing
+node-8.testing
+ansible -i inventory/homelab -m shell -a "yum install -y krb5-workstation krb5-libs"
+
+
+
+- Install ldap clients on the cloudera manager server 
 
 yum -y openldap-clients
 ```
@@ -24,13 +47,16 @@ default_realm = HOMELAB.COM
 
 [domain_realm]
  .homelab.com = HOMELAB.COM
- homelab.com = HO.COM
+ homelab.com = HOMELAB.COM
 ```
 
 - Copy conf file to /etc
 ```
 cp /var/lib/ambari-server/resources/scripts/krb5.conf /etc
 ```
+- Copy the /etc/krb5.conf file to all nodes 
+```
+ansible all -i inventory/homelab -m copy -a "src=/etc/krb5.conf dest=/etc/krb5.conf"
 
 - Create kerberos db: when asked, enter hadoop as the key
 ```
